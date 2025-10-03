@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProject\\UCLProject.csproj": {}
+    "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProj\\UCL_Draw\\UCLProject.csproj": {}
   },
   "projects": {
-    "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProject\\UCLProject.csproj": {
+    "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProj\\UCL_Draw\\UCLProject.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProject\\UCLProject.csproj",
+        "projectUniqueName": "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProj\\UCL_Draw\\UCLProject.csproj",
         "projectName": "UCLProject",
-        "projectPath": "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProject\\UCLProject.csproj",
+        "projectPath": "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProj\\UCL_Draw\\UCLProject.csproj",
         "packagesPath": "C:\\Users\\t-pegansallo\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProject\\obj\\",
+        "outputPath": "c:\\Users\\t-pegansallo\\Desktop\\Personal Project\\UCLProj\\UCL_Draw\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\t-pegansallo\\AppData\\Roaming\\NuGet\\NuGet.Config"

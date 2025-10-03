@@ -11,7 +11,7 @@ class Scheduler
 
     public static List<Club> EligibleMatches(Club club, List<Club> allteams)
     {
-        List<Club> possibleTeams = (allteams);
+        List<Club> possibleTeams = new List<Club>(allteams);
         // Remove matches where teams already met there country or pot limit
         foreach (var team in allteams)
         {
@@ -79,11 +79,16 @@ class Scheduler
             {
                 var pot = potTeamNeeded.Key;
                 var teamsNeeded = potTeamNeeded.Value;
-                if (!potTeamsAvailable.ContainsKey(pot) || potTeamsAvailable[pot].Count < teamsNeeded)
+                if (teamsNeeded == 0)
                 {
-                    canFinish = false;
-                    return canFinish;
+                    // go to next pot because they already met requirements for this pot and next line would cause error
+                    continue;
                 }
+                if (!potTeamsAvailable.ContainsKey(pot) || potTeamsAvailable[pot].Count < teamsNeeded)
+                    {
+                        canFinish = false;
+                        return canFinish;
+                    }
             }
 
         }
@@ -227,7 +232,7 @@ class Scheduler
         var countries_played = new Dictionary<string, int>();
         var pots_played = new Dictionary<string, int>();
 
-        foreach (Club opponent in club.Schedule)
+        foreach (Club? opponent in club.Schedule)
         {
             if (opponent != null)
             {
@@ -264,7 +269,7 @@ class Scheduler
         allteams.Remove(club);
         var c_allteams = new List<Club>(allteams);
         int index = 0;
-        foreach (Club opponent in club.Schedule)
+        foreach (Club? opponent in club.Schedule)
         {
             // update countries played and pots played each time a match may have been made
             var (countries_played, pots_played) = CheckSchedule(club); // previous teams played info
