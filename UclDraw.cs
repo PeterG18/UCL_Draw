@@ -12,7 +12,7 @@ namespace UclDraw
         static Club RealMadrid = new Club { Name = "Real Madrid", Country = "Spain", Pot = "1" };
         static Club ManCity = new Club { Name = "Manchester City", Country = "England", Pot = "1" };
         static Club Bayern = new Club { Name = "Bayern München", Country = "Germany", Pot = "1" };
-        static Club Liverpool = new Club { Name = "Liverpool", Country = "England", Pot = "1" };
+        static Club Liverpool = new Club { Name = "Liverpool", Country = "England", Pot = "1" }; 
         static Club Inter = new Club { Name = "Inter", Country = "Italy", Pot = "1" };
         static Club Chelsea = new Club { Name = "Chelsea", Country = "England", Pot = "1" };
         static Club Dortmund = new Club { Name = "Borussia Dortmund", Country = "Germany", Pot = "1" };
