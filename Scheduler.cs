@@ -9,32 +9,75 @@ namespace ScheduleManager;
 class Scheduler
 {
 
-    public static List<Club> EligibleMatches(Club club, List<Club> allteams)
+    public static (List<Club>, List<Club>) EligibleMatches(Club club, List<Club> allteams)
     {
         List<Club> possibleTeams = new List<Club>(allteams);
         // Remove matches where teams already met there country or pot limit
+
+        //debug
+        List<Club> removedTeams = new List<Club>();
+
+        var (main_countries_played, main_pots_played) = CheckSchedule(club);
+
+        // select countries that have been played at least twice and turn into a list
+        var countriesWithTwoOrMore = main_countries_played.Where(countrykey => countrykey.Value >= 2)
+        .Select(kv => kv.Key)
+        .ToList();
+        
         foreach (var team in allteams)
         {
 
-            // Match sure match is eligible on opponent side
+            // if club has played a country twice make sure opponent isnt eligible to play this team
+            if (countriesWithTwoOrMore.Contains(team.Country))
+            {
+                possibleTeams.Remove(team);
+                removedTeams.Add(team);
+            }
+            
+            // Team can't play against itself
+            if (team.Name == club.Name)
+            {
+                possibleTeams.Remove(team);
+                removedTeams.Add(team);
+                continue;
+            }
+
+            // Don't play against team from same country
+            if (team.Country == club.Country)
+            {
+                possibleTeams.Remove(team);
+                removedTeams.Add(team);
+                continue;
+            }
+
+            // Match sure match is also eligible on opponent side
+            // Making sure the opponents schedule doesnt have a country played more than twice before matching with club from that country
             var (countries_played, pots_played) = CheckSchedule(team); // previous teams played info
             foreach (var country in countries_played)
             {
-                if (country.Value >= 2)
+                if (country.Key == club.Country)
                 {
-                    possibleTeams.Remove(team);
-                    continue;
+                    if (country.Value >= 2)
+                    {
+                        possibleTeams.Remove(team);
+                        removedTeams.Add(team);
+                        continue;
+                    }
                 }
             }
             foreach (var teampot in pots_played)
             {
-                if (teampot.Value >= 2)
+                if (teampot.Key == club.Pot)
                 {
-                    possibleTeams.Remove(team);
+                    if (teampot.Value >= 2)
+                    {
+                        possibleTeams.Remove(team);
+                        removedTeams.Add(team);
+                    }
                 }
             }
         }
-        return possibleTeams;
+        return (possibleTeams,removedTeams);
     }
 
     public static Dictionary<string, int> PotsRemaining(Club club)
@@ -55,7 +98,7 @@ class Scheduler
         return potsremain;
     }
 
-    public static bool CanFinishSchedule(List<Club> allteams)
+    public static bool CanFinishSchedule(List<Club> allteams, Club debugteam)
     {
         bool canFinish = true;
         foreach (Club team in allteams)
@@ -63,7 +106,7 @@ class Scheduler
             Dictionary<string, List<Club>> potTeamsAvailable = new Dictionary<string, List<Club>>();
             var (countries_played, pots_played) = CheckSchedule(team);
             var remainingPots = PotsRemaining(team);
-            var teamsAvailable = EligibleMatches(team, allteams);
+            var (teamsAvailable, removedTeams) = EligibleMatches(team, allteams);
 
             // Get eligible teams for each pot
             foreach (var possMatch in teamsAvailable)
@@ -94,29 +137,6 @@ class Scheduler
         }
 
         return canFinish;
-    }
-
-    public static List<Club> RemoveMaxCountries(Club club, List<Club> allteams, Dictionary<string, int> countries_played)
-    {
-        // Since you also can't play country from same country we're going to add that to be removed
-        countries_played[club.Country!] = 2;
-        var copy_allteams = new List<Club>(allteams);
-        foreach (var country in countries_played) // in dictionary
-        {
-
-            if (country.Value == 2)
-            {
-                foreach (var team in allteams)
-                {
-                    if (team.Country == country.Key)
-                    {
-                        copy_allteams.Remove(team);
-                    }
-                }
-            }
-        }
-
-        return copy_allteams;
     }
 
     public static void AddMatch(Club club, Club match, int index)
@@ -201,26 +221,32 @@ class Scheduler
     {
         // decide on random match
         // All clubs where Pot == input of pot number
-        var possibleMatches = EligibleMatches(club, allteams);
+        var (possibleMatches,removedTeams) = EligibleMatches(club, allteams);
         List<Club> potClubs = possibleMatches.Where(c => c.Pot == pot).ToList();
-    
-        int randomIndex = rand.Next(potClubs.Count);
-        var match = potClubs[randomIndex];
+        foreach (Club? opponent in club.Schedule)
+        {
+            if (opponent != null  && potClubs.Contains(opponent))
+            {
+                potClubs.Remove(opponent);
+            }
+        }
         bool canFinish = false;
         while (canFinish == false)
         {
+            int randomIndex = rand.Next(potClubs.Count);
+            var match = potClubs[randomIndex];
             AddMatch(club, match, index);
-            var canEntireScheduleFinsh = CanFinishSchedule(allteams);
+            var canEntireScheduleFinsh = CanFinishSchedule(allteams,club);
             if (canEntireScheduleFinsh == true)
             {
                 break;
             }
             else
             {
+                RemoveMatch(club, match, index);
                 potClubs.Remove(match);
                 randomIndex = rand.Next(potClubs.Count);
                 match = potClubs[randomIndex];
-                RemoveMatch(club, match, index);
             }
         }
 
@@ -265,8 +291,6 @@ class Scheduler
     // - Have to play 2 teams from each pot
     public static void ScheduleGenerate(Club club, List<Club> allteams)
     {    
-        // remove club so can longer be drawn since it's getting schedule chose
-        allteams.Remove(club);
         var c_allteams = new List<Club>(allteams);
         int index = 0;
         foreach (Club? opponent in club.Schedule)
@@ -280,30 +304,26 @@ class Scheduler
                 if (!pots_played.ContainsKey("1") || pots_played["1"] < 2)
                 {
                     MatchCreate(club, "1", index, c_allteams);
-                    c_allteams.Remove(club.Schedule[index]!);
                 }
 
                 else if (!pots_played.ContainsKey("2") || pots_played["2"] < 2)
                 {
                     MatchCreate(club, "2", index, c_allteams);
-                    c_allteams.Remove(club.Schedule[index]!);
                 }
 
                 else if (!pots_played.ContainsKey("3") || pots_played["3"] < 2)
                 {
                     MatchCreate(club, "3", index, c_allteams);
-                    c_allteams.Remove(club.Schedule[index]!);
                 }
 
                 else if (!pots_played.ContainsKey("4") || pots_played["4"] < 2)
                 {
                     MatchCreate(club, "4", index, c_allteams);
-                    c_allteams.Remove(club.Schedule[index]!);
                 }
             }
             index++;
         }
 
-
+        allteams.Remove(club);
     }
 }
